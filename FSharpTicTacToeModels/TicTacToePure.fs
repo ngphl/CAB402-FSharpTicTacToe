@@ -1,6 +1,7 @@
 namespace QUT
 
     module FSharpPureTicTacToeModel =
+        open System.Drawing
     
         // type to represent the two players: Noughts and Crosses
         type Player = Nought | Cross
@@ -9,21 +10,35 @@ namespace QUT
         type Move = 
             { row: int; col: int } //{ something: int (* TODO implement type *) }
             interface ITicTacToeMove with
-                member this.Row with get() = raise (System.NotImplementedException("getRow"))
-                member this.Col with get() = raise (System.NotImplementedException("getCol"))
+                member this.Row with get() = this.row
+                member this.Col with get() = this.col
 
         // type to represent the current state of the game, including the size of the game (NxN), who's turn it is and the pieces on the board
         type GameState = 
-            { something: int (* TODO implement type *) }
+            { currentTurn: Player; boardSize: int; board: string array }//state: (Move*Player) list } //row, col player?
             interface ITicTacToeGame<Player> with
-                member this.Turn with get()    = raise (System.NotImplementedException("getTurn"))
-                member this.Size with get()    = raise (System.NotImplementedException("getSize"))
-                member this.getPiece(row, col) = raise (System.NotImplementedException("getPiece"))
+                member this.Turn with get()    = this.currentTurn
+                member this.Size with get()    = this.boardSize
+                member this.getPiece(row, col) = this.board.[row*this.boardSize+col]
 
 
-        let CreateMove row col = raise (System.NotImplementedException("CreateMove"))
+        let CreateMove row col = 
+            let move:Move = { row = row; col = col } //implied
+            move
 
-        let ApplyMove (oldState:GameState) (move: Move) = raise (System.NotImplementedException("CreateMove"))
+        let ApplyMove (oldState:GameState) (move: Move) : GameState =
+            let coord = move.row*oldState.boardSize+move.col
+            let addToken (oldBoard:string array) coords currentPlayer : string array= 
+                match currentPlayer with
+                | Nought -> oldBoard.[coords] <- "AAAAAAAA" //not letting me mutate the array, could do something where it recurses over the array filling it with previous values, stopping on the new coord and filling it witha  new value, would also well support exceptions if necesary
+                | Cross -> oldBoard.[coords]
+            let changePlayer (state:GameState) = 
+                match state.currentTurn with
+                | Nought -> Cross
+                | Cross -> Nought
+            
+            let newState = {currentTurn = changePlayer oldState; boardSize = oldState.boardSize; board = addToken oldState.board coord oldState.currentTurn}
+            newState
 
         // Returns a sequence containing all of the lines on the board: Horizontal, Vertical and Diagonal
         // The number of lines returned should always be (size*2+2)
@@ -39,7 +54,18 @@ namespace QUT
 
         let GameOutcome game = raise (System.NotImplementedException("GameOutcome"))
 
-        let GameStart (firstPlayer:Player) size = raise (System.NotImplementedException("GameStart"))
+        let GameStart (firstPlayer:Player) size =
+            let gameState = {currentTurn = firstPlayer; boardSize = size; board = [| for i in 1 .. size*size -> "" |]}
+            //For observing the array
+            //for x in 0..size-1 do
+            //    for y in 0..size-1 do
+            //        let index = x*size+y
+            //        System.Console.Write("Accessing" + index.ToString() + "| ")
+            //        System.Console.Write(gameState.board.[x*size+y])
+            //    System.Console.WriteLine("")
+                
+            
+            gameState
 
         let MiniMax game = raise (System.NotImplementedException("MiniMax"))
 
