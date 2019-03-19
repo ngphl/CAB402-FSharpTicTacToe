@@ -2,6 +2,7 @@ namespace QUT
 
     module FSharpPureTicTacToeModel =
         open System.Drawing
+        open System
     
         // type to represent the two players: Noughts and Crosses
         type Player = Nought | Cross
@@ -15,7 +16,7 @@ namespace QUT
 
         // type to represent the current state of the game, including the size of the game (NxN), who's turn it is and the pieces on the board
         type GameState = 
-            { currentTurn: Player; boardSize: int; board: string array }//state: (Move*Player) list } //row, col player?
+            { currentTurn: Player; boardSize: int; board: string list }//state: (Move*Player) list } //row, col player?
             interface ITicTacToeGame<Player> with
                 member this.Turn with get()    = this.currentTurn
                 member this.Size with get()    = this.boardSize
@@ -27,18 +28,35 @@ namespace QUT
             move
 
         let ApplyMove (oldState:GameState) (move: Move) : GameState =
-            let coord = move.row*oldState.boardSize+move.col
-            let addToken (oldBoard:string array) coords currentPlayer : string array= 
-                match currentPlayer with
-                | Nought -> oldBoard.[coords] <- "AAAAAAAA" //not letting me mutate the array, could do something where it recurses over the array filling it with previous values, stopping on the new coord and filling it witha  new value, would also well support exceptions if necesary
-                | Cross -> oldBoard.[coords]
-            let changePlayer (state:GameState) = 
-                match state.currentTurn with
-                | Nought -> Cross
-                | Cross -> Nought
+            let rec InsertEle oldArr ele i = 
+                match i, oldArr with
+                | i, [] -> []
+                | 0, head::tail -> ele::tail
+                | i, head::tail -> head::insert tail ele (i-1)
             
-            let newState = {currentTurn = changePlayer oldState; boardSize = oldState.boardSize; board = addToken oldState.board coord oldState.currentTurn}
-            newState
+
+            //GRAVEYARD
+            //Considers i starting from tail
+            //let rec InsertEle (oldarr:list<int>) ele i =
+            //    match oldarr with
+            //    | [] -> []
+            //    | head::tail -> 
+            //        System.Console.Write("Length is: " + oldarr.Length.ToString() + "& Desired pos is " + i.ToString() + " || ")
+            //        System.Console.WriteLine("Total is : " + (oldarr.Length-1).ToString())
+            //        if oldarr.Length-1 = i
+            //        then head::ele::(InsertEle tail.Tail ele i) 
+            //        else head::(InsertEle tail ele i)
+            (* Whoops impure...
+            let coord = move.row*oldState.boardSize + move.col 
+            match oldState.currentTurn with
+            | Nought-> 
+                Array.set oldState.board coord "O"
+                {currentTurn = Cross; boardSize=oldState.boardSize; board=oldState.board}
+            | Cross -> 
+                Array.set oldState.board coord "X"
+                {currentTurn = Nought; boardSize=oldState.boardSize; board=oldState.board}
+            *)
+            
 
         // Returns a sequence containing all of the lines on the board: Horizontal, Vertical and Diagonal
         // The number of lines returned should always be (size*2+2)
@@ -55,7 +73,10 @@ namespace QUT
         let GameOutcome game = raise (System.NotImplementedException("GameOutcome"))
 
         let GameStart (firstPlayer:Player) size =
-            let gameState = {currentTurn = firstPlayer; boardSize = size; board = [| for i in 1 .. size*size -> "" |]}
+            let gamestate = {currentTurn = firstPlayer; boardSize = size; board = [ for i in 1..size*size -> ""]}
+            gamestate
+            //impure
+            //let gameState = {currentTurn = firstPlayer; boardSize = size; board = [| for i in 1 .. size*size -> "" |]}
             //For observing the array
             //for x in 0..size-1 do
             //    for y in 0..size-1 do
@@ -63,9 +84,6 @@ namespace QUT
             //        System.Console.Write("Accessing" + index.ToString() + "| ")
             //        System.Console.Write(gameState.board.[x*size+y])
             //    System.Console.WriteLine("")
-                
-            
-            gameState
 
         let MiniMax game = raise (System.NotImplementedException("MiniMax"))
 
