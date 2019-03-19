@@ -32,8 +32,17 @@ namespace QUT
                 match i, oldArr with
                 | i, [] -> []
                 | 0, head::tail -> ele::tail
-                | i, head::tail -> head::insert tail ele (i-1)
-            
+                | i, head::tail -> head::InsertEle tail ele (i-1)
+            let GetCurrentPlayerToken player = 
+                match player with
+                | Nought -> "O"
+                | Cross -> "X"
+            let CalcCoord (move: Move) size = 
+                move.row*size+move.col
+
+            let newBoard = InsertEle oldState.board (GetCurrentPlayerToken oldState.currentTurn) (CalcCoord move oldState.boardSize) 
+            let newState = {currentTurn= oldState.currentTurn; boardSize = oldState.boardSize; board = newBoard}
+            newState
 
             //GRAVEYARD
             //Considers i starting from tail
