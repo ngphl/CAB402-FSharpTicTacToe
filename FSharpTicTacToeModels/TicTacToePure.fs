@@ -39,9 +39,13 @@ namespace QUT
                 | Cross -> "X"
             let CalcCoord (move: Move) size = 
                 move.row*size+move.col
+            let ChangePlayer player = 
+                match player with
+                | Nought -> Cross
+                | Cross -> Nought
 
             let newBoard = InsertEle oldState.board (GetCurrentPlayerToken oldState.currentTurn) (CalcCoord move oldState.boardSize) 
-            let newState = {currentTurn= oldState.currentTurn; boardSize = oldState.boardSize; board = newBoard}
+            let newState = {currentTurn= ChangePlayer oldState.currentTurn; boardSize = oldState.boardSize; board = newBoard}
             newState
 
             //GRAVEYARD
