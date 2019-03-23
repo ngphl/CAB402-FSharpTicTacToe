@@ -77,8 +77,17 @@ namespace QUT
         // For example, if the input size = 2, then the output would be: 
         //     seq [seq[(0,0);(0,1)];seq[(1,0);(1,1)];seq[(0,0);(1,0)];seq[(0,1);(1,1)];seq[(0,0);(1,1)];seq[(0,1);(1,0)]]
         // The order of the lines and the order of the squares within each line does not matter
-        let Lines (size:int) : seq<seq<int*int>> = raise (System.NotImplementedException("Lines"))
-
+        let Lines (size:int) : seq<seq<int*int>> = 
+            let GetRows x = seq {for y in 0..size-1 do yield (x,y)}
+            let GetCols x = seq {for y in 0..size-1 do yield (y,x)}
+            let LDiag = seq { for i in 0..size-1 do yield (i,i)}
+            let RDiag = seq { for i in 0..size-1 do yield (size-1-i,i)}
+            seq { 
+                for x in 0..size-1 do yield GetRows x; 
+                for x in 0..size-1 do yield GetCols x; //Rebind these to !yield for readability if time later on
+                yield LDiag;
+                yield RDiag
+                }
         // Checks a single line (specified as a sequence of (row,column) coordinates) to determine if one of the players
         // has won by filling all of those squares, or a Draw if the line contains at least one Nought and one Cross
         let CheckLine (game:GameState) (line:seq<int*int>) : TicTacToeOutcome<Player> = raise (System.NotImplementedException("CheckLine"))
