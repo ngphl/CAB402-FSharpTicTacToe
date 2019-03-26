@@ -90,10 +90,34 @@ namespace QUT
                 }
         // Checks a single line (specified as a sequence of (row,column) coordinates) to determine if one of the players
         // has won by filling all of those squares, or a Draw if the line contains at least one Nought and one Cross
-        let CheckLine (game:GameState) (line:seq<int*int>) : TicTacToeOutcome<Player> = raise (System.NotImplementedException("CheckLine"))
+        let CheckLine (game:GameState) (line:seq<int*int>) : TicTacToeOutcome<Player> = 
+            let lineList = [for coord in line do yield game.board.[(fst coord)*game.boardSize+(snd coord)]]
+            let rec Counter L search count = 
+                match L with
+                | [] -> count
+                | head::tail -> if head=search then Counter tail search count+1 else Counter tail search count
 
-        let GameOutcome game = raise (System.NotImplementedException("GameOutcome"))
+            let XCount = Counter lineList "X" 0
+            let OCount = Counter lineList "O" 0
+            
+            if XCount = game.boardSize then Win(Cross, line)
+            elif OCount = game.boardSize then Win(Nought, line)
+            elif XCount >= 1 && OCount >= 1 then Draw
+            else Undecided
+            //Extract relevant line from gamestate & bind to a list
+            //FILTER items and return counter for N and C
+            //Check against each other, N==3|C==3 = Win, N==C = Draw, else Undecided (1ofeach)
 
+        let GameOutcome game = 
+            let lines = Seq.map (fun line -> CheckLine game line) (Lines game.boardSize)
+            //Seq.find (fun x -> x = Win()) lines
+            Lines game.boardSize |> Seq.map (fun line -> CheckLine game line)
+                                 
+            //Map a new value to each line
+            //See if win exists. If it does grab it
+            //If win doesnt exist check if undecided exists. If it does return undecided
+            // if neither return Draw
+            
         let GameStart (firstPlayer:Player) size =
             let gamestate = {currentTurn = firstPlayer; boardSize = size; board = [ for i in 1..size*size -> ""]}
             gamestate
