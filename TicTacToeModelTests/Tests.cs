@@ -5,7 +5,7 @@ using System;
 namespace QUT
 {
     [TestClass]
-    public abstract class TicTacToeModelTests<Game, Move, Player> where Game: ITicTacToeGame<Player> where Move: ITicTacToeMove
+    public abstract class TicTacToeModelTests<Game, Move, Player> where Game : ITicTacToeGame<Player> where Move : ITicTacToeMove
     {
         protected ITicTacToeModel<Game, Move, Player> modelUnderTest;
         protected abstract ITicTacToeModel<Game, Move, Player> ModelUnderTest();
@@ -13,7 +13,7 @@ namespace QUT
         protected Player Cross => modelUnderTest.Cross;
         protected Player Nought => modelUnderTest.Nought;
 
-        protected Game GenerateGame(Player first, int size, params ValueTuple<int,int>[] moves)
+        protected Game GenerateGame(Player first, int size, params ValueTuple<int, int>[] moves)
         {
             var game = modelUnderTest.GameStart(first, size);
 
@@ -22,12 +22,12 @@ namespace QUT
 
             return game;
         }
-		
-		[TestInitialize]
-		public void Initialize()
-		{
-			modelUnderTest = ModelUnderTest();
-		}
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            modelUnderTest = ModelUnderTest();
+        }
 
         [TestMethod]
         public void TestGameStat()
@@ -4192,6 +4192,38 @@ namespace QUT
                 Assert.IsTrue(expectedLine.Contains((square.Item1, square.Item2)));
             }
             Assert.AreEqual(expectedLine.Count, actualCount);
+        }
+
+        [TestMethod]
+        public void TestCUSTOMOUTCOME()
+        {
+            var game = GenerateGame(Cross, 3, (0, 0), (1, 0), (0, 1), (1, 2), (2, 2), (1, 1), (2, 1));
+            var outcome = modelUnderTest.GameOutcome(game);
+            System.Console.WriteLine(game);
+
+            //var gameW = GenerateGame(Nought, 5, (0, 0), (1, 0), (0, 1), (1, 1), (0, 2), (1, 2), (0, 3), (1, 3), (0, 4));
+            //var outcomeW = modelUnderTest.GameOutcome(gameW);
+            //Assert.IsTrue(outcomeW.IsWin);
+            //var gameU = GenerateGame(Cross, 3, (2, 0), (1, 0));
+            //var outcomeU = modelUnderTest.GameOutcome(gameU);
+            //Assert.IsTrue(outcomeU.IsUndecided);
+            //var gameD = GenerateGame(Cross, 3, (0, 0), (1, 0), (0, 1), (0, 2), (1, 2), (2, 2), (1, 1), (2, 1), (2, 0));
+            //var outcomeD = modelUnderTest.GameOutcome(gameD);
+            //Assert.IsTrue(outcomeD.IsDraw);
+        }
+
+        [TestMethod]
+        public void TESTCUSTOM()
+        {
+            //var game = GenerateGame(Cross, 3, (0, 0), (1, 0), (0, 1), (0, 2), (1, 2), (2, 2));
+            //var move = modelUnderTest.FindBestMove(game);
+            //Assert.AreEqual(14, NodeCounter.Count);
+
+            var game = GenerateGame(Cross, 3, (1, 0), (0, 0), (1, 1));
+            var move = modelUnderTest.FindBestMove(game);
+            var bestMoves = new List<ValueTuple<int, int>>() { (1, 2) };
+            System.Console.WriteLine(move.Row + " " + move.Col);
+            Assert.IsTrue(bestMoves.Contains((move.Row, move.Col)));
         }
     }
 
