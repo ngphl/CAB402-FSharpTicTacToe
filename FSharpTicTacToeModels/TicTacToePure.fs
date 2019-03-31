@@ -111,13 +111,27 @@ namespace QUT
         let GameOutcome game = 
             let lines = Seq.map (fun line -> CheckLine game line) (Lines game.boardSize)
             //Seq.find (fun x -> x = Win()) lines
-            Lines game.boardSize |> Seq.map (fun line -> CheckLine game line)
-                                 
+            //Lines game.boardSize |> Seq.map (fun line -> CheckLine game line)
+
+
+            let isUndecided line = Undecided = CheckLine game line
+            let isWin line = 
+                let result = CheckLine game line
+                if Win(Nought, line) = result || Win(Cross, line) = result
+                then true
+                else false
+            match Seq.tryFind (fun e -> isWin e) (Lines game.boardSize) with
+            | Some value -> CheckLine game value
+            | None -> if Seq.exists (fun e -> isUndecided e) (Lines game.boardSize) then Undecided
+                      else Draw
+            //match Seq.tryFind (fun e -> isUndecided e) (Lines game.boardSize) with
+            //| Some value -> printfn(value) Undecided
+            //| None -> Draw
             //Map a new value to each line
             //See if win exists. If it does grab it
             //If win doesnt exist check if undecided exists. If it does return undecided
             // if neither return Draw
-            
+
         let GameStart (firstPlayer:Player) size =
             let gamestate = {currentTurn = firstPlayer; boardSize = size; board = [ for i in 1..size*size -> ""]}
             gamestate
@@ -131,7 +145,82 @@ namespace QUT
             //        System.Console.Write(gameState.board.[x*size+y])
             //    System.Console.WriteLine("")
 
-        let MiniMax game = raise (System.NotImplementedException("MiniMax"))
+        let MiniMax game = 
+            //Compare the perspective with the state to see what to be checking for. Return a score for this item based on its worth
+            // return -1 0 1
+            let heuristic state perspective = 
+                match GameOutcome state with
+                | Win(currentPlayer, _) -> if currentPlayer = perspective then 1 else -1
+                | _ -> 0
+
+                //If the other players turn exists at any point with a 2 in a row return -1
+                //If false, if perspective turn has 2 in any point +1
+                //else if any position next to an occupied space OR opposite to an occupied space is desirable
+
+            //Simply return current player
+            let getTurn game = game.currentTurn
+
+            //Check to see if draw/win exists, false if undecided
+            let gameOver game = 
+                match GameOutcome game with
+                | Undecided -> false
+                | _ -> true
+
+            //Create all possible moves?
+            let moveGenerator state : seq<Move> = 
+                let getEmptyTiles line = 
+                    let newLine = line |> Seq.filter (fun tile -> 
+                        let row = fst tile
+                        let col = snd tile
+                        let gameTile = state.board.[row*state.boardSize+col]
+                        if gameTile = "" then true
+                        else false
+                    )
+                    newLine |> Seq.toList
+                let getValidMoves lines = 
+                    let validMoves = lines |> Seq.map (fun line -> getEmptyTiles line) 
+                                           |> Seq.filter (fun move -> if move = [] then false else true)
+                                           |> Seq.reduce List.append
+                                           |> Seq.distinct 
+                                           |> Seq.map (fun validMove -> CreateMove (fst validMove) (snd validMove))
+                    validMoves
+
+                getValidMoves (Lines game.boardSize)
+
+            //Implement applymove func written earlier
+            let applyMove game move = ApplyMove game move
+
+            //Call minimaxi generator
+            let generator = GameTheory.MiniMaxGenerator heuristic getTurn gameOver moveGenerator applyMove
+            let best_move = generator game game.currentTurn
+            Option.get (fst best_move) //placeholder till i figure out how to return properly
+
+            //Returns a Minimax function (game, player) returns option<int*int)
+
+            (* GRAVEYARD
+            INITIAL CODE FOR MOVE GEN
+            
+            let tester (line:seq<int*int>) = 
+                let newLine = line |> Seq.filter (fun tile -> 
+                    let row = fst tile
+                    let col = snd tile
+                    let gameTile = game.board.[row*game.boardSize+col]
+                    if gameTile = "" then true
+                    else false
+                )
+                newLine |> Seq.toList
+            let testerOuter lines = 
+                let newLine = lines |> Seq.map (fun line -> tester line) 
+                                    |> Seq.filter (fun move -> if move = [] then false else true)
+                                    |> Seq.reduce List.append
+                                    |> Seq.distinct 
+                                    |> Seq.map (fun validMove -> CreateMove (fst validMove) (snd validMove))
+                newLine
+            //tester (Seq.item 2 (Lines game.boardSize))
+            let z = testerOuter (Lines game.boardSize)
+            System.Console.WriteLine(z |> Seq.toList)
+            
+            *)
 
         let MiniMaxWithPruning game = raise (System.NotImplementedException("MiniMaxWithPruning"))
 
@@ -155,7 +244,7 @@ namespace QUT
         type BasicMiniMax() =
             inherit Model()
             override this.ToString()         = "Pure F# with basic MiniMax";
-            override this.FindBestMove(game) = raise (System.NotImplementedException("FindBestMove"))
+            override this.FindBestMove(game) = MiniMax game
 
 
         type WithAlphaBetaPruning() =
