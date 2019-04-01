@@ -4229,6 +4229,8 @@ namespace QUT
 
     public abstract class TicTacToeModelWithBasicMiniMaxTests<Game, Move, Player> : TicTacToeModelTests<Game, Move, Player> where Game : ITicTacToeGame<Player> where Move : ITicTacToeMove
     {
+
+
         [TestMethod]
         public void TestFindBestNodeCount()
         {
@@ -5120,6 +5122,14 @@ namespace QUT
 
     public abstract class TicTacToeModelWithAlphaBetaPruningTests<Game, Move, Player> : TicTacToeModelTests<Game, Move, Player> where Game : ITicTacToeGame<Player> where Move : ITicTacToeMove
     {
+        [TestMethod]
+        public void TESTCUSTOMAB()
+        {
+            var game = GenerateGame(Cross, 3, (0, 0), (1, 0), (0, 1), (0, 2), (1, 2), (2, 2), (1, 1), (2, 1));
+            var move = modelUnderTest.FindBestMove(game);
+            Assert.AreEqual(2, NodeCounter.Count);
+        }
+
         [TestMethod]
         public void TestFindBestNodeCount()
         {

@@ -52,8 +52,45 @@ namespace QUT
 
         let MiniMaxWithAlphaBetaPruningGenerator (heuristic:'Game -> 'Player -> int) (getTurn: 'Game -> 'Player) (gameOver:'Game->bool) (moveGenerator: 'Game->seq<'Move>) (applyMove: 'Game -> 'Move -> 'Game) : int -> int -> 'Game -> 'Player -> Option<'Move> * int =
             // Optimized MiniMax algorithm that uses alpha beta pruning to eliminate parts of the search tree that don't need to be explored            
-            let rec MiniMax alpha beta oldState perspective =
+            let rec MiniMax (alpha:int) (beta:int) game perspective : Option<'Move> * int =
                 NodeCounter.Increment()
-                raise (System.NotImplementedException("Alpha Beta Pruning"))
+
+                let rec maxer moves alpha beta = 
+                    match moves with
+                    | head::tail -> 
+                        let newState = applyMove game head
+                        let new_alpha = max alpha (snd (MiniMax alpha beta newState perspective))
+                        if new_alpha >= beta then
+                            (Some(head), new_alpha)
+                        else 
+                            maxer tail alpha beta
+                    | [] -> (None, 0)
+                let rec minner moves alpha beta = 
+                    match moves with
+                    | head::tail -> 
+                        let newState = applyMove game head
+                        let new_beta = min beta (snd (MiniMax alpha beta newState perspective))
+                        if alpha >= new_beta then
+                            (Some(head), new_beta)
+                        else 
+                            minner tail alpha beta
+                    | [] -> (None, 0)
+
+                if gameOver game then 
+                    (None, heuristic game perspective)
+                else
+                    let moves = moveGenerator game
+                    if getTurn game = perspective then maxer (moves|>Seq.toList) alpha beta
+                    else minner (moves|>Seq.toList) alpha beta
+                
+                    
+                (*if gameOver game then 
+                    (None, heuristic game perspective)
+                else 
+                    if getTurn game = perspective then find_max
+                    else find_min
+                    let z = find_max ((moveGenerator game)|>Seq.toList)
+                    (None, 0)*)
+                    
             NodeCounter.Reset()
             MiniMax

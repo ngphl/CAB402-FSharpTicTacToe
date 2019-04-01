@@ -222,8 +222,39 @@ namespace QUT
             
             *)
 
-        let MiniMaxWithPruning game = raise (System.NotImplementedException("MiniMaxWithPruning"))
+        let MiniMaxWithPruning game = 
+            let heuristic state perspective = 
+                match GameOutcome state with
+                | Win(currentPlayer, _) -> if currentPlayer = perspective then 1 else -1
+                | _ -> 0
+            let getTurn game = game.currentTurn
+            let gameOver game = 
+                match GameOutcome game with
+                | Undecided -> false
+                | _ -> true
+            let moveGenerator state : seq<Move> = 
+                let getEmptyTiles line = 
+                    let newLine = line |> Seq.filter (fun tile -> 
+                        let row = fst tile
+                        let col = snd tile
+                        let gameTile = state.board.[row*state.boardSize+col]
+                        if gameTile = "" then true
+                        else false
+                    )
+                    newLine |> Seq.toList
+                let getValidMoves lines = 
+                    let validMoves = lines |> Seq.map (fun line -> getEmptyTiles line) 
+                                           |> Seq.filter (fun move -> if move = [] then false else true)
+                                           |> Seq.reduce List.append
+                                           |> Seq.distinct 
+                                           |> Seq.map (fun validMove -> CreateMove (fst validMove) (snd validMove))
+                    validMoves
+                getValidMoves (Lines game.boardSize)
+            let applyMove game move = ApplyMove game move
 
+            let generator = GameTheory.MiniMaxWithAlphaBetaPruningGenerator heuristic getTurn gameOver moveGenerator applyMove
+            let best_move = generator -2 2 game game.currentTurn
+            Option.get (fst best_move)
         // plus other helper functions ...
 
 
@@ -250,4 +281,4 @@ namespace QUT
         type WithAlphaBetaPruning() =
             inherit Model()
             override this.ToString()         = "Pure F# with Alpha Beta Pruning";
-            override this.FindBestMove(game) = raise (System.NotImplementedException("FindBestMove"))
+            override this.FindBestMove(game) = MiniMaxWithPruning game
