@@ -54,43 +54,127 @@ namespace QUT
             // Optimized MiniMax algorithm that uses alpha beta pruning to eliminate parts of the search tree that don't need to be explored            
             let rec MiniMax (alpha:int) (beta:int) game perspective : Option<'Move> * int =
                 NodeCounter.Increment()
-
-                let rec maxer moves alpha beta = 
-                    match moves with
-                    | head::tail -> 
-                        let newState = applyMove game head
-                        let new_alpha = max alpha (snd (MiniMax alpha beta newState perspective))
-                        if new_alpha >= beta then
-                            (Some(head), new_alpha)
-                        else 
-                            maxer tail alpha beta
-                    | [] -> (None, 0)
-                let rec minner moves alpha beta = 
-                    match moves with
-                    | head::tail -> 
-                        let newState = applyMove game head
-                        let new_beta = min beta (snd (MiniMax alpha beta newState perspective))
-                        if alpha >= new_beta then
-                            (Some(head), new_beta)
-                        else 
-                            minner tail alpha beta
-                    | [] -> (None, 0)
-
-                if gameOver game then 
-                    (None, heuristic game perspective)
-                else
-                    let moves = moveGenerator game
-                    if getTurn game = perspective then maxer (moves|>Seq.toList) alpha beta
-                    else minner (moves|>Seq.toList) alpha beta
                 
+
+                let maximiser state = 
+                    let moves = moveGenerator state
+                    moves |> Seq.fold (fun acc move -> 
+                        let newAlpha = max alpha (snd acc)
+                        if newAlpha >= beta then 
+                            acc
+                        else 
+                            let newState = applyMove game move
+                            let bestScore = max (snd (MiniMax newAlpha beta newState perspective)) (snd acc)
+                            let bestMove = (Some(move), bestScore) 
+                            bestMove
+                    ) (None, -1)
+                let minimiser state = 
+                    let moves = moveGenerator state
+                    moves |> Seq.fold (fun acc move -> 
+                        let newBeta = min beta (snd acc)
+                        if alpha >= newBeta then 
+                            acc
+                        else 
+                            let newState = applyMove game move
+                            let bestScore = min (snd (MiniMax alpha newBeta newState perspective)) (snd acc)
+                            let bestMove = (Some(move), bestScore) 
+                            bestMove
+                    ) (None, 1)
                     
-                (*if gameOver game then 
-                    (None, heuristic game perspective)
-                else 
-                    if getTurn game = perspective then find_max
-                    else find_min
-                    let z = find_max ((moveGenerator game)|>Seq.toList)
-                    (None, 0)*)
+                if gameOver game then 
+                    let score = (None, heuristic game perspective)
+                    score
+                else if getTurn game = perspective then maximiser game
+                else minimiser game
                     
             NodeCounter.Reset()
             MiniMax
+
+(* let rec maxer moves alpha beta = 
+    match moves with
+    | head::tail -> 
+        let newState = applyMove game head
+        let new_alpha = max alpha (snd (MiniMax alpha beta newState perspective))
+        if new_alpha >= beta then
+            (Some(head), new_alpha)
+        else 
+            (Some(head), snd (maxer tail alpha beta))
+    | [] -> (None, 0)
+let rec minner moves alpha beta = 
+    match moves with
+    | head::tail -> 
+        let newState = applyMove game head
+        let new_beta = min beta (snd (MiniMax alpha beta newState perspective))
+        if alpha >= new_beta then
+            (Some(head), new_beta)
+        else 
+            (Some(head), snd (minner tail alpha beta))
+    | [] -> (None, 0)*)
+
+(*let rec tryMax moves alpha beta = 
+    match moves with
+    | head :: tail -> 
+        if List.length tail = 0 then
+            let newState= applyMove game head
+            (Some(head), snd (MiniMax alpha beta newState perspective))
+        else tryMax tail alpha beta
+    | [] -> printf "ERROR"; (None, 0)
+
+let rec tryMin moves alpha beta : Option<'Move>*int = 
+    match moves with
+    | head :: tail -> 
+        if List.length tail = 0 then
+            let newState= applyMove game head
+            (Some(head), snd (MiniMax alpha beta newState perspective))
+        else tryMin tail alpha beta
+    | [] -> printf "ERROR"; (None, 0)
+
+if gameOver game then 
+    (None, heuristic game perspective)
+else
+    if getTurn game = perspective then
+        NodeCounter.Increment()
+        let moves = moveGenerator game |> Seq.toList
+        tryMax moves alpha beta
+    else 
+        NodeCounter.Increment()
+        let moves = moveGenerator game |> Seq.toList
+        tryMin moves alpha beta*)
+
+(* let rec maxxer moves = 
+                        match moves with
+                        | [move] -> 
+                            let newState = applyMove game move
+                            let score = MiniMax alpha beta newState perspective
+                            let bestAlpha = max (snd score) alpha
+                            let final = (Some(move), bestAlpha)
+                            final
+                        | move::tail -> 
+                            let newState = applyMove game move
+                            let score = MiniMax alpha beta newState perspective
+                            let bestAlpha = max (snd score) alpha
+                            if bestAlpha >= beta then (Some(move), bestAlpha)
+                            else 
+                                let final = Some(move), snd (maxxer tail)
+                                final
+                        | [] -> System.Console.WriteLine("ERROR");(None, 0)
+                    let rec minner moves = 
+                        match moves with
+                        | [move] -> 
+                            let newState = applyMove game move
+                            let score = MiniMax alpha beta newState perspective
+                            let bestBeta = min (snd score) beta
+                            let final = (Some(move), bestBeta)
+                            final
+                        | move::tail -> 
+                            let newState = applyMove game move
+                            let score = MiniMax alpha beta newState perspective
+                            let bestBeta = min (snd score) beta
+                            if alpha >= bestBeta then (Some(move), bestBeta)
+                            else 
+                                let final = Some(move), snd (minner tail)
+                                final
+                        | [] -> System.Console.WriteLine("ERROR");(None, 0)
+                    let moves = moveGenerator game |> Seq.toList
+                    if getTurn game = perspective then maxxer moves
+                    else minner moves*)

@@ -252,8 +252,10 @@ namespace QUT
                 getValidMoves (Lines game.boardSize)
             let applyMove game move = ApplyMove game move
 
+                
+
             let generator = GameTheory.MiniMaxWithAlphaBetaPruningGenerator heuristic getTurn gameOver moveGenerator applyMove
-            let best_move = generator -2 2 game game.currentTurn
+            let best_move = generator -1 1 game game.currentTurn
             Option.get (fst best_move)
         // plus other helper functions ...
 
