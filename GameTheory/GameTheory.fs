@@ -64,8 +64,12 @@ namespace QUT
                             acc
                         else 
                             let newState = applyMove game move
-                            let bestScore = max (snd (MiniMax newAlpha beta newState perspective)) (snd acc)
-                            let bestMove = (Some(move), bestScore) 
+                            //let bestScore = max (snd (MiniMax newAlpha beta newState perspective)) (snd acc)
+                            let fixedAcc = 
+                                if fst acc = None then
+                                    (Some(move), snd acc)
+                                else acc
+                            let bestMove = [fixedAcc; (Some(move), snd (MiniMax newAlpha beta newState perspective))] |> List.maxBy snd
                             bestMove
                     ) (None, -1)
                 let minimiser state = 
@@ -76,8 +80,13 @@ namespace QUT
                             acc
                         else 
                             let newState = applyMove game move
-                            let bestScore = min (snd (MiniMax alpha newBeta newState perspective)) (snd acc)
-                            let bestMove = (Some(move), bestScore) 
+                            //let bestScore = min (snd (MiniMax alpha newBeta newState perspective)) (snd acc)
+                            let fixedAcc = 
+                                if fst acc = None then
+                                    (Some(move), snd acc)
+                                else acc
+
+                            let bestMove = [fixedAcc; (Some(move), snd (MiniMax alpha newBeta newState perspective)) ] |> List.minBy snd
                             bestMove
                     ) (None, 1)
                     

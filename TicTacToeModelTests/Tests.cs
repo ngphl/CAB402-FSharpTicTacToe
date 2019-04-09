@@ -1833,6 +1833,7 @@ namespace QUT
             var game = GenerateGame(Cross, 3, (0, 0), (2, 2), (1, 2));
             var move = modelUnderTest.FindBestMove(game);
             var bestMoves = new List<ValueTuple<int, int>>() { (1, 0), (1, 1), (2, 0) };
+            System.Console.WriteLine(move);
             Assert.IsTrue(bestMoves.Contains((move.Row, move.Col)));
         }
 
