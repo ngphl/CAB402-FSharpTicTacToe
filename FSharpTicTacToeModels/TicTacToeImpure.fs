@@ -5,7 +5,7 @@ namespace QUT
         type Player = Nought | Cross
 
         type GameState = 
-            { mutable currentTurn: Player; boardSize: int; board: string [,] } 
+            { currentTurn: Player; boardSize: int; board: string [,] } 
             interface ITicTacToeGame<Player> with
                 member this.Turn with get()    = this.currentTurn
                 member this.Size with get()    = this.boardSize
@@ -25,45 +25,100 @@ namespace QUT
             let getLDiag (arr:string [,]) = seq { for i in 0..size-1 do yield arr.[i,i]}
             let getRDiag (arr:string [,]) = seq { for i in 0..size-1 do yield arr.[size-1-i,i]}
 
+            let countByVar (elem:string) S = 
+                if Seq.contains elem S then snd (S |> Seq.countBy (fun x -> x = elem) |> Seq.find (fun x -> (fst x) = true))
+                else 0
+
             let checkLine line coordGenerator = 
-                if result = Undecided || result = Draw then
-                    if line |> Seq.contains ""
-                    then 
-                        result <- Undecided
-                    elif Seq.forall (fun x -> x = "X") line then result <- Win(Cross, coordGenerator)
-                    elif Seq.forall (fun x -> x = "O") line then result <- Win(Nought, coordGenerator)
-                    
+                if Seq.forall (fun x -> x = "X") line then Win(Cross, coordGenerator)
+                elif Seq.forall (fun x -> x = "O") line then Win(Nought, coordGenerator)
+                elif (countByVar "X" line) >= 1 && (countByVar "O" line) >= 1 then Draw
+                else Undecided
+            
+            let ldiag = getLDiag game.board
+            let rdiag = getRDiag game.board
+            let genLDiagLine = seq { for i in 0..size-1 -> (i,i)}
+            let genRDiagLine = seq { for i in 0..size-1 -> (size-1-i,i)}
+            match result with
+            | Draw -> result <- (checkLine ldiag genLDiagLine) //Draw is overwritten by anything
+            | Undecided -> if not((checkLine ldiag genLDiagLine) = Draw) then result <- checkLine ldiag genLDiagLine //Undecided cannnot be overwritten by draw
+            | Win(_,_) -> (checkLine ldiag genLDiagLine) |> ignore //nothing matter cause a win already exists
+
+            match result with
+            | Draw -> result <- (checkLine rdiag genRDiagLine) //Draw is overwritten by anything
+            | Undecided -> if not((checkLine rdiag genRDiagLine) = Draw) then result <- checkLine rdiag genRDiagLine //Undecided cannnot be overwritten by draw
+            | Win(_,_) -> (checkLine rdiag genRDiagLine) |> ignore //nothing matter cause a win already exists
+
             let board = game.board
             for i in 0..size-1 do
                 let row = getRow i board
                 let col = getCol i board
-                let ldiag = getLDiag board
-                let rdiag = getRDiag board
                 let genRowLine = seq { for y in 0..size-1 -> (i,y)}
                 let genColLine = seq { for x in 0..size-1 -> (x, i)}
-                let genLDiagLine = seq { for i in 0..size-1 -> (i,i)}
-                let genRDiagLine = seq { for i in 0..size-1 -> (size-1-i,i)}
-
-                checkLine row genRowLine
-                checkLine col genColLine
-                checkLine rdiag genRDiagLine
-                checkLine ldiag genLDiagLine
-
+                match result with
+                | Draw -> result <- (checkLine row genRowLine) //Draw is overwritten by anything
+                | Undecided -> if not((checkLine row genRowLine) = Draw) then result <- checkLine row genRowLine //Undecided cannnot be overwritten by draw
+                | Win(_,_) -> (checkLine row genRowLine) |> ignore //nothing matter cause a win already exists
+                match result with
+                | Draw -> result <- (checkLine col genColLine) //Draw is overwritten by anything
+                | Undecided -> if not((checkLine col genColLine) = Draw) then result <- checkLine col genColLine //Undecided cannnot be overwritten by draw
+                | Win(_,_) -> (checkLine col genColLine) |> ignore //nothing matter cause a win already exists
             result
 
         let ApplyMove (game:GameState) move = 
             let token = if game.currentTurn = Nought then "O" else "X"
-            game.board.[move.row, move.col] <- token
-            game.currentTurn <- if game.currentTurn = Nought then Cross else Nought
-            game
+            let board = Array2D.copy game.board //Else mutable state just uses a reference >:(
+            board.[move.row, move.col] <- token
+            let currTurn = if game.currentTurn = Nought then Cross else Nought
+            { currentTurn = currTurn; boardSize = game.boardSize; board=board}
 
         let CreateMove row col = 
             let move = { row = row; col = col }
             move
 
+        let Lines (size:int) : seq<seq<int*int>> = 
+            let GetRows x = seq {for y in 0..size-1 do yield (x,y)}
+            let GetCols x = seq {for y in 0..size-1 do yield (y,x)}
+            let LDiag = seq { for i in 0..size-1 do yield (i,i)}
+            let RDiag = seq { for i in 0..size-1 do yield (size-1-i,i)}
+            seq { 
+                for x in 0..size-1 do yield GetRows x; 
+                for x in 0..size-1 do yield GetCols x; //Rebind these to !yield for readability if time later on
+                yield LDiag;
+                yield RDiag
+                }
+
         let FindBestMove game =
-            //
-            raise (System.NotImplementedException("FindBestMove"))
+            let heuristic state perspective = 
+                match GameOutcome state with
+                | Win(currentPlayer, _) -> if currentPlayer = perspective then 1 else -1
+                | _ -> 0
+            let getTurn game = game.currentTurn
+            let gameOver game = 
+                match GameOutcome game with
+                | Undecided -> false
+                | _ -> true
+            let moveGenerator state : seq<Move> =
+                let getEmptyTiles line = 
+                    let newLine = line |> Seq.filter (fun tile ->
+                        let row = fst tile
+                        let col = snd tile
+                        if state.board.[row, col] = "" then true
+                        else false
+                    )
+                    newLine |> Seq.toList
+                let getValidMoves lines = 
+                    let validMoves = lines |> Seq.map (fun line -> getEmptyTiles line) 
+                                           |> Seq.filter (fun move -> if move = [] then false else true)
+                                           |> Seq.reduce List.append
+                                           |> Seq.distinct 
+                                           |> Seq.map (fun validMove -> CreateMove (fst validMove) (snd validMove))
+                    validMoves
+                getValidMoves (Lines game.boardSize)
+
+            let generator = GameTheory.MiniMaxWithAlphaBetaPruningGenerator heuristic getTurn gameOver moveGenerator ApplyMove
+            let best_move = generator -1 1 game game.currentTurn
+            Option.get (fst best_move)
 
         let GameStart first size = 
             let createBoard = array2D [| for x in 1..size -> [|for y in 1..size -> ""|]|]
