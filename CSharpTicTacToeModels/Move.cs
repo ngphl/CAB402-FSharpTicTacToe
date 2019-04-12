@@ -7,8 +7,8 @@
 
         public Move(int row, int col)
         {
-            Col = row;
-            Row = col;
+            Row = row;
+            Col = col;
         }
     }
 }

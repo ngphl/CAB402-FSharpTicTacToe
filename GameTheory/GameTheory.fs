@@ -55,7 +55,6 @@ namespace QUT
             let rec MiniMax (alpha:int) (beta:int) game perspective : Option<'Move> * int =
                 NodeCounter.Increment()
                 
-
                 let maximiser state = 
                     let moves = moveGenerator state
                     moves |> Seq.fold (fun acc move -> 

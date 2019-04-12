@@ -19,7 +19,7 @@ namespace QUT.CSharpTicTacToe
             Board = board;
         }
         
-        public void ApplyMove(Move move)
+        /*public void ApplyMove(Move move)
         {
             Player newPlayer;
             string token;
@@ -35,6 +35,6 @@ namespace QUT.CSharpTicTacToe
             }
             Board[move.Col, move.Row] = token;
             Turn = newPlayer;
-        }
+        }*/
     }
 }

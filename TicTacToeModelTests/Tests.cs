@@ -85,6 +85,7 @@ namespace QUT
         {
             var game = GenerateGame(Cross, 3, (0, 0));
             var outcome = modelUnderTest.GameOutcome(game);
+            System.Console.WriteLine(outcome);
             Assert.IsTrue(outcome.IsUndecided);
         }
 
@@ -93,7 +94,8 @@ namespace QUT
         {
             var game = GenerateGame(Cross, 3, (0, 0));
             var move = modelUnderTest.FindBestMove(game);
-            System.Console.WriteLine(move);
+            System.Console.WriteLine(move.Row);
+            System.Console.WriteLine(move.Col);
             var bestMoves = new List<ValueTuple<int, int>>() { (1, 1) };
             Assert.IsTrue(bestMoves.Contains((move.Row, move.Col)));
         }
@@ -1111,6 +1113,7 @@ namespace QUT
             Assert.AreEqual(Cross, win.winner);
             var expectedLine = new List<ValueTuple<int, int>>() { (0, 0), (0, 1), (0, 2) };
             var actualCount = 0;
+            System.Console.WriteLine(outcome);
             foreach (var square in win.line)
             {
                 actualCount++;
@@ -5124,9 +5127,9 @@ namespace QUT
         [TestMethod]
         public void TESTCUSTOM()
         {
-            var game = GenerateGame(Cross, 3, (0, 0), (0, 1), (1, 0), (1, 1));
+            var game = GenerateGame(Cross, 3, (0, 0), (1, 0), (0, 1), (0, 2), (1, 2), (2, 2), (1, 1), (2, 1));
             var move = modelUnderTest.FindBestMove(game);
-            Assert.AreEqual(25, NodeCounter.Count);
+            Assert.AreEqual(2, NodeCounter.Count);
         }
 
         [TestMethod]

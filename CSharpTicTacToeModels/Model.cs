@@ -7,6 +7,7 @@ namespace QUT.CSharpTicTacToe
     {
         public Player Cross => Player.Cross;
         public Player Nought => Player.Nought;
+        public Player perspective;
         public override string ToString()
         {
             return "Impure C# with Alpha Beta Pruning";
@@ -14,10 +15,23 @@ namespace QUT.CSharpTicTacToe
 
         public Game ApplyMove(Game game, Move move)
         {
-            //newBoard = game.Board.Clone() as string[,];
-            //newBoard[move.Row, move.Col] = token;
-            game.ApplyMove(move);
-            return game;
+            Player newPlayer;
+            string token;
+            string[,] newBoard = game.Board.Clone() as string[,];
+
+            if (game.Turn == Player.Nought)
+            {
+                newPlayer = Player.Cross;
+                token = "O";
+            }
+            else
+            {
+                newPlayer = Player.Nought;
+                token = "X";
+            }
+            newBoard[move.Row, move.Col] = token;
+            Game newGame = new Game(newPlayer, game.Size, newBoard);
+            return newGame;
         }
 
         public Move CreateMove(int row, int col)
@@ -100,7 +114,7 @@ namespace QUT.CSharpTicTacToe
                 {
                     if (game.Board[x, y] == "")
                     {
-                        validMoves.Add(CreateMove(x, y));
+                        validMoves.Add(CreateMove(x,y));
                     }
                 }
             }
@@ -112,24 +126,92 @@ namespace QUT.CSharpTicTacToe
 
         public Move FindBestMove(Game game)
         {
-            throw new System.NotImplementedException("FindBestMove");
+            NodeCounter.Reset();
+            Tuple<Move, int> best_move = MiniMaxAB(CreateMove(0,0), game, -1, 1);
+            Move moveStuff = best_move.Item1;
+            return CreateMove(moveStuff.Row, moveStuff.Col);
         }
 
-        private Move bestMove MiniMax(Game game, int alpha, int beta, Player perspective)
+        private Tuple<Move, int> MiniMaxAB(Move cuurMove, Game game, int alpha, int beta)
         {
-            //Check if gameoutcome is a win or a draw then return
-
-            if (game.Turn == perspective) {
-
-            } else
+            NodeCounter.Increment();
+            if (GameOutcome(game) == TicTacToeOutcome<Player>.Undecided)
             {
-
+                List<Move> moves = GetAllPossibleMoves(game);
+                //
+                System.Console.Write(game.Board[0, 0]);
+                System.Console.Write(game.Board[0, 1]);
+                System.Console.WriteLine(game.Board[0, 2]);
+                System.Console.Write(game.Board[1, 0]);
+                System.Console.Write(game.Board[1, 1]);
+                System.Console.WriteLine(game.Board[1, 2]);
+                System.Console.Write(game.Board[2, 0]);
+                System.Console.Write(game.Board[2, 1]);
+                System.Console.WriteLine(game.Board[2, 2]);
+                System.Console.WriteLine("---Expand---");
+                //
+                if (game.Turn == perspective)
+                {
+                    Move best_move = cuurMove;
+                    foreach (Move move in moves)
+                    {
+                        Game newGameState = ApplyMove(game, move);
+                        Tuple<Move, int> score = MiniMaxAB(move, newGameState, alpha, beta);
+                        best_move = alpha > score.Item2 ? best_move : score.Item1;
+                        alpha = Math.Max(alpha, score.Item2);
+                        if (alpha >= beta)
+                        {
+                            System.Console.WriteLine("Snapped a branch");
+                            break;
+                        }
+                    }
+                    return Tuple.Create(best_move, alpha);
+                }
+                else
+                {
+                    Move best_move = cuurMove;
+                    foreach (Move move in moves)
+                    {
+                        Game newGameState = ApplyMove(game, move);
+                        Tuple<Move, int> score = MiniMaxAB(move, newGameState, alpha, beta);
+                        best_move = beta < score.Item2 ? best_move : score.Item1;
+                        beta = Math.Min(beta, score.Item2);
+                        if (alpha >= beta)
+                        {
+                            System.Console.WriteLine("Snapped a branch");
+                            break;
+                        }
+                    }
+                    return Tuple.Create(best_move, beta);
+                }
+            }
+            else
+            {
+                int heuristic_val;
+                if (GameOutcome(game) == TicTacToeOutcome<Player>.Draw)
+                {
+                    heuristic_val = 0;
+                }
+                else
+                {
+                    if (game.Turn != perspective)
+                    {
+                        heuristic_val = 1;
+                    }
+                    else
+                    {
+                        heuristic_val = -1;
+                    }
+                }
+                Tuple<Move, int> score = new Tuple<Move, int>(cuurMove, heuristic_val);
+                return score;
             }
         }
 
         public Game GameStart(Player first, int size)
         {
             string[,] board = new string[size,size];
+            perspective = first;
             for(int x=0; x < size; x++)
             {
                 for (int y = 0; y < size; y++)
@@ -141,3 +223,55 @@ namespace QUT.CSharpTicTacToe
         }
     }
 }
+/*
+ * if (game.Turn == perspective) //Maximiser
+                {
+                    List<Move> moves = GetAllPossibleMoves(game);
+                    Tuple<Move, int> best_move = new Tuple<Move, int>(null, -1);
+                    foreach (Move move in moves)
+                    {
+                        int newAlpha = Math.Max(alpha, best_move.Item2);
+                        if (newAlpha >= beta)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            Game newGameState = ApplyMove(game, move);
+                            if (best_move.Item1 == null)
+                            {
+                                best_move = new Tuple<Move, int>(move, best_move.Item2);
+                            }
+                            var score = MiniMax(newGameState, newAlpha, beta, perspective);
+                            Tuple<Move, int> maxxer = best_move.Item2 >= score.Item2 ? best_move : score;
+                            best_move = Tuple.Create(maxxer.Item1, maxxer.Item2);
+                        }
+                    }
+                    return best_move;
+                } else
+                {
+                    List<Move> moves = GetAllPossibleMoves(game);
+                    Tuple<Move, int> best_move = new Tuple<Move, int>(null, 1);
+                    foreach (Move move in moves)
+                    {
+                        int newBeta = Math.Min(beta, best_move.Item2);
+                        if (alpha >= newBeta)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            Game newGameState = ApplyMove(game, move);
+                            if (best_move.Item1 == null)
+                            {
+                                best_move = new Tuple<Move, int>(move, best_move.Item2);
+                            }
+                            var score = MiniMax(newGameState, alpha, newBeta, perspective);
+                            Tuple<Move, int> minner = best_move.Item2 <= score.Item2 ? best_move : score;
+                            best_move = Tuple.Create(minner.Item1, minner.Item2);
+                        }
+                    }
+                    return best_move;
+                }
+
+    */
