@@ -70,7 +70,7 @@ namespace QUT
                                 else acc
                             let bestMove = [fixedAcc; (Some(move), snd (MiniMax newAlpha beta newState perspective))] |> List.maxBy snd
                             bestMove
-                    ) (None, -1)
+                    ) (None, -10000)
                 let minimiser state = 
                     let moves = moveGenerator state
                     moves |> Seq.fold (fun acc move -> 
@@ -87,7 +87,7 @@ namespace QUT
 
                             let bestMove = [fixedAcc; (Some(move), snd (MiniMax alpha newBeta newState perspective)) ] |> List.minBy snd
                             bestMove
-                    ) (None, 1)
+                    ) (None, 10000)
                     
                 if gameOver game then 
                     let score = (None, heuristic game perspective)
