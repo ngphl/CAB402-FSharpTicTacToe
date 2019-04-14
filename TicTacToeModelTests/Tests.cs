@@ -4215,10 +4215,24 @@ namespace QUT
         }
 
         [TestMethod]
+        public void TestAFOUR()
+        {
+            var game = GenerateGame(Cross, 4, (0,0), (0, 1), (0, 2), (0, 3), (1, 1), (1, 3), (1, 2), (1, 0), (2, 0), (2, 1), (2, 3), (2, 2), (3, 1), (3, 2));
+            var outcome = modelUnderTest.GameOutcome(game);
+            var move = modelUnderTest.FindBestMove(game);
+            System.Console.WriteLine(game);
+            System.Console.WriteLine(move.Row);
+            System.Console.WriteLine(move.Col);
+            System.Console.WriteLine(NodeCounter.Count);
+            Assert.IsTrue(outcome.IsDraw);
+        }
+
+        [TestMethod]
         public void TestCUSTOMOUTCOME()
         {
             var game = GenerateGame(Cross, 3, (0, 0), (1, 0), (0, 1), (1, 2), (2, 2), (1, 1), (2, 1));
             var outcome = modelUnderTest.GameOutcome(game);
+
             System.Console.WriteLine(game);
 
             //var gameW = GenerateGame(Nought, 5, (0, 0), (1, 0), (0, 1), (1, 1), (0, 2), (1, 2), (0, 3), (1, 3), (0, 4));
