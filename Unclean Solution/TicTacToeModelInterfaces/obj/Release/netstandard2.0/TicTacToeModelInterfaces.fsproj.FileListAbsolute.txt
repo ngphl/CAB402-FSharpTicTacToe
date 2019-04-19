@@ -1,0 +1,8 @@
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\bin\Release\netstandard2.0\TicTacToeModelInterfaces.deps.json
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\bin\Release\netstandard2.0\TicTacToeModelInterfaces.dll
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\bin\Release\netstandard2.0\TicTacToeModelInterfaces.pdb
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\obj\Release\netstandard2.0\TicTacToeModelInterfaces.AssemblyInfoInputs.cache
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\obj\Release\netstandard2.0\TicTacToeModelInterfaces.AssemblyInfo.fs
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\obj\Release\netstandard2.0\TicTacToeModelInterfaces.dll
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\obj\Release\netstandard2.0\TicTacToeModelInterfaces.pdb
+E:\University\2019\CAB402\Assessment 1\TicTacToeModelInterfaces\obj\Release\netstandard2.0\TicTacToeModelInterfaces.fsprojAssemblyReference.cache
